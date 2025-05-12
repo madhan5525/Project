@@ -1,0 +1,33 @@
+# Install necessary packages
+!pip install transformers gradio --quiet
+
+# Import libraries
+import pandas as pd
+from transformers import pipeline
+import gradio as gr
+
+# Load your dataset
+df = pd.read_csv("sample.csv")
+
+# Load pre-trained sentiment analysis model
+sentiment_model = pipeline("sentiment-analysis")
+
+# Run sentiment analysis on all tweets (text column)
+df['sentiment'] = df['text'].apply(lambda x: sentiment_model(x)[0]['label'])
+
+# Display the first few predictions
+print(df[['text', 'sentiment']].head())
+
+# Define Gradio sentiment predictor function
+def analyze_sentiment(tweet):
+result = sentiment_model(tweet)[0]
+return f"{result['label']} (score: {round(result['score'], 2)})"
+
+# Create Gradio interface
+gr.Interface(
+fn=analyze_sentiment,
+inputs=gr.Textbox(lines=3, placeholder="Enter a tweet..."),
+outputs="text",
+title="📊 Tweet Sentiment Analyzer",
+description="Enter a tweet to predict whether it's positive, negative, or neutral sentiment."
+).launch()
